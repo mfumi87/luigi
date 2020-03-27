@@ -162,6 +162,11 @@ class CopyToTable(rdbms.CopyToTable):
     To customize how to access data from an input task, override the `rows` method
     with a generator that yields each row as a tuple with fields ordered according to `columns`.
     """
+    
+    @property
+    def upsert_mode(self):
+        """Override to True if query statement is REPLACE INTO (default is INSERT INTO)."""
+        return False
 
     def rows(self):
         """
@@ -190,9 +195,14 @@ class CopyToTable(rdbms.CopyToTable):
         )
 
     def copy(self, cursor, file=None):
+        sql_mode = 'INSERT'
+
+        if self.upsert_mode:
+            sql_mode = 'REPLACE'
+
         values = '({})'.format(','.join(['%s' for i in range(len(self.columns))]))
         columns = '({})'.format(','.join([c[0] for c in self.columns]))
-        query = 'INSERT INTO {} {} VALUES {}'.format(self.table, columns, values)
+        query = '{} INTO {} {} VALUES {}'.format(sql_mode, self.table, columns, values)
         rows = []
 
         for idx, row in enumerate(self.rows()):
