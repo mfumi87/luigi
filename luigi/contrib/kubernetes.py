@@ -28,7 +28,7 @@ For more information about Kubernetes Jobs: http://kubernetes.io/docs/user-guide
 
 Requires:
 
-- pykube: ``pip install pykube``
+- pykube: ``pip install pykube-ng``
 
 Written and maintained by Marco Capuccini (@mcapuccini).
 """
@@ -267,13 +267,13 @@ class KubernetesJobTask(luigi.Task):
             logs = pod.logs(timestamps=True).strip()
             self.__logger.info("Fetching logs from " + pod.name)
             if len(logs) > 0:
-                for l in logs.split('\n'):
-                    self.__logger.info(l)
+                for line in logs.split('\n'):
+                    self.__logger.info(line)
 
     def __print_kubectl_hints(self):
         self.__logger.info("To stream Pod logs, use:")
         for pod in self.__get_pods():
-            self.__logger.info("`kubectl logs -f pod/%s`" % pod.name)
+            self.__logger.info("`kubectl logs -f pod/%s -n %s`" % (pod.name, pod.namespace))
 
     def __verify_job_has_started(self):
         """Asserts that the job has successfully started"""
